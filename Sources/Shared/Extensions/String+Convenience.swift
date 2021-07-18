@@ -1,6 +1,6 @@
 import Foundation
 
-extension String {
+public extension String {
     static func localizedString(forStatusCode statusCode: Int) -> String {
         HTTPURLResponse.localizedString(forStatusCode: statusCode)
     }

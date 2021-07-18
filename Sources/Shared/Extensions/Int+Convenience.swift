@@ -1,5 +1,5 @@
 import Foundation
 
-extension Int {
+public extension Int {
     var uint: UInt { UInt(self) }
 }
