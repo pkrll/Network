@@ -10,7 +10,8 @@ let package = Package(
     ],
     dependencies: [],
     targets: [
-        .target(name: "Network", dependencies: []),
+        .target(name: "Network", dependencies: ["Shared"]),
+        .target(name: "Shared", dependencies: []),
         .testTarget(name: "NetworkTests", dependencies: ["Network"])
     ]
 )
