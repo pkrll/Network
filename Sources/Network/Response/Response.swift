@@ -5,7 +5,7 @@ public struct Response {
     public let data: Data?
     private let response: HTTPURLResponse
     
-    public var status: Status { Status(rawValue: response.statusCode) }
+    public var status: Status { Status(response.statusCode) }
     public var headers: [AnyHashable: Any] { response.allHeaderFields }
     public var message: String { .localizedString(forStatusCode: response.statusCode) }
 }
