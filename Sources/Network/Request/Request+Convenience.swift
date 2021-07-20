@@ -16,6 +16,13 @@ public extension Request {
         return request
     }
     
+    static func patch(_ path: String) -> Self {
+        var request = Request(.patch, headers: [:])
+        request.path = path
+        
+        return request
+    }
+    
     static func post(_ path: String, headers: [String: String] = [:]) -> Self {
         var request = Request(.post, headers: headers)
         request.path = path
