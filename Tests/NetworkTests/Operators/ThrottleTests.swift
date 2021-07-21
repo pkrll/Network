@@ -70,4 +70,40 @@ final class ThrottleTests: XCTestCase {
         
         wait(for: expectations, timeout: 10)
     }
+    
+    func testThrottleReset() {
+        let expectations = [
+            XCTestExpectation(description: "Request 1"),
+            XCTestExpectation(description: "Request 2")
+        ]
+        
+        let throttle = Throttle(count: 1)
+        let transport = MockTransport(response: .failure(MockError.unknown), delay: 1)
+        throttle.next = TransportOperator(transport: transport)
+        
+        var request = request
+        request.throttle = .always
+        
+        let task1 = throttle.send(request) { _ in
+            XCTFail("Expected reset.")
+        }
+        
+        task1.addCancellation {
+            expectations[0].fulfill()
+        }
+
+        let task2 = throttle.send(request) { _ in
+            XCTFail("Expected reset.")
+        }
+        
+        task2.addCancellation {
+            expectations[1].fulfill()
+        }
+        
+        throttle.reset {
+            expectations[2].fulfill()
+        }
+        
+        wait(for: expectations, timeout: 10)
+    }
 }
