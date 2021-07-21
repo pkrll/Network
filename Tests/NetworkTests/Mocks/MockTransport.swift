@@ -1,5 +1,5 @@
 import Foundation
-import Network
+@testable import Network
 
 final class MockTransport: Transport {
     
@@ -18,7 +18,9 @@ final class MockTransport: Transport {
         }
         
         func cancel() {
-            completion = nil
+            let completion = completion
+            self.completion = nil
+            completion?(nil, nil, URLError(.cancelled))
         }
         
         func resume() {

@@ -14,13 +14,13 @@ final class TransportOperatorTests: XCTestCase {
     func testFailure() {
         let expectation = XCTestExpectation(description: "Sending request.")
         
-        let transport = MockTransport(response: .failure(MockError.unknown))
+        let error = URLError(.unknown)
+        let transport = MockTransport(response: .failure(error))
         let operation = TransportOperator(transport: transport)
 
         operation.send(request) { result in
-            if case .failure(let error) = result,
-               let error = error.underlyingError as? MockError {
-                XCTAssertEqual(error, MockError.unknown)
+            if case .failure(let error) = result {
+                XCTAssertEqual(error.code, .unknown)
             } else {
                 XCTFail("Expected MockError.")
             }
@@ -56,21 +56,31 @@ final class TransportOperatorTests: XCTestCase {
     }
     
     func testCancel() {
-        let expectation = XCTestExpectation(description: "Sending request.")
+        let expectations = [
+            XCTestExpectation(description: "Completion"),
+            XCTestExpectation(description: "Cancellation handler.")
+        ]
 
-        let transport = MockTransport(response: .failure(MockError.unknown), delay: 0.25)
+        let error = URLError(.unknown)
+        let transport = MockTransport(response: .failure(error), delay: 0.25)
         let operation = TransportOperator(transport: transport)
 
-        let task = operation.send(request) { _ in
-            XCTFail("Expected cancel.")
+        let task = operation.send(request) { result in
+            guard case .failure(let error) = result else {
+                XCTFail("Expected cancel.")
+                return
+            }
+            
+            XCTAssertEqual(error.code, .cancelled)
+            expectations[0].fulfill()
         }
         
         task.addCancellation {
-            expectation.fulfill()
+            expectations[1].fulfill()
         }
         
         task.cancel()
         
-        wait(for: [expectation], timeout: 10)
+        wait(for: expectations, timeout: 10)
     }
 }
