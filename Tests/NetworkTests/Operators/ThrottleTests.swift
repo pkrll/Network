@@ -24,7 +24,7 @@ final class ThrottleTests: XCTestCase {
         let transport = MockTransport(response: .failure(MockError.unknown), delay: 2)
         throttle.next = TransportOperator(transport: transport)
         
-        var start: TimeInterval = 0
+        var start: TimeInterval?
         throttle.send(request) { _ in
             expectations[0].fulfill()
             start = CFAbsoluteTimeGetCurrent()
@@ -34,7 +34,7 @@ final class ThrottleTests: XCTestCase {
         
         throttle.send(request) { _ in
             expectations[1].fulfill()
-            XCTAssertEqual(start, 0)
+            XCTAssertNil(start)
         }
         
         wait(for: expectations, timeout: 10)
