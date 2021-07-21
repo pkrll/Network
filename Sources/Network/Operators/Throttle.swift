@@ -79,6 +79,8 @@ public final class Throttle: Operator {
                     
                     task.cancel()
                 }
+                
+                group.leave()
             }
         }
         
@@ -115,17 +117,14 @@ public final class Throttle: Operator {
     }
     
     private func pause(task: Task) {
-        self.accessQueue.async(flags: .barrier) {
+        self.accessQueue.sync(flags: .barrier) {
             self.pendingTasks.append(task)
         }
         
-        task.addCancellation { [weak self] in
-            guard let self = self else { return }
-            self.removingFirstTask { task in
-                guard let task = task else { return }
-                let error = HttpError(code: .cancelled, request: task.request)
-                task.complete(with: .failure(error))
-            }
+        task.addCancellation { [weak task] in
+            guard let task = task else { return }
+            let error = HttpError(code: .cancelled, request: task.request)
+            task.complete(with: .failure(error))
         }
     }
     
