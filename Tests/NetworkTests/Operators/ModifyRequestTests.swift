@@ -16,14 +16,15 @@ final class ModifyRequestsTests: XCTestCase {
         
         let modifyRequest = ModifyRequest { request in
             var request = request
+            request.host = "gitlab.com"
+            request.path = "v1\(request.path)"
             request.add(headers: ["X-API-KEY": "HelloWorld123FooBarBaz"])
             
             return request
         }
-        
-        let transport = MockTransport(response: .failure(MockError.unknown))
-        modifyRequest.next = TransportOperator(transport: transport)
-        
+
+        XCTAssertEqual(request.host, "github.com")
+        XCTAssertEqual(request.path, "/pkrll/network")
         XCTAssertNil(request.headers["X-API-KEY"])
         
         modifyRequest.send(request) { result in
@@ -36,6 +37,8 @@ final class ModifyRequestsTests: XCTestCase {
                 request = response.request
             }
             
+            XCTAssertEqual(request.host, "gitlab.com")
+            XCTAssertEqual(request.path, "/v1/pkrll/network")
             XCTAssertEqual(request.headers["X-API-KEY"], "HelloWorld123FooBarBaz")
             expectation.fulfill()
         }
