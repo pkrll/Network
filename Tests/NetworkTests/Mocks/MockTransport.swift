@@ -3,10 +3,10 @@ import Network
 
 final class MockTransport: Transport {
     
-    struct MockTask: TransportTask {
+    final class MockTask: TransportTask {
         
         private let response: Result<(data: Data, response: URLResponse), Error>
-        private var completion: (Data?, URLResponse?, Error?) -> Void
+        private var completion: ((Data?, URLResponse?, Error?) -> Void)?
         private let delay: Double
         
         init(response: Result<(data: Data, response: URLResponse), Error>,
@@ -18,16 +18,16 @@ final class MockTransport: Transport {
         }
         
         func cancel() {
-            
+            completion = nil
         }
         
         func resume() {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 switch self.response {
                 case .failure(let error):
-                    self.completion(nil, nil, error)
+                    self.completion?(nil, nil, error)
                 case .success(let response):
-                    self.completion(response.data, response.response, nil)
+                    self.completion?(response.data, response.response, nil)
                 }
             }
         }
