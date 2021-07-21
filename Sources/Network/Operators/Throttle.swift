@@ -37,10 +37,6 @@ public final class Throttle: Operator {
         super.init(next: nil)
     }
     
-    deinit {
-        print("deinit")
-    }
-    
     public override func load(_ task: Task) {
         guard case .always = task.request.throttle else {
             super.load(task)
@@ -48,10 +44,8 @@ public final class Throttle: Operator {
         }
         
         if canStartTask {
-            print("starting")
             start(task: task)
         } else {
-            print("pausing")
             pause(task: task)
         }
     }
