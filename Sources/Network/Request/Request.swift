@@ -17,7 +17,7 @@ public struct Request {
     
     public var path: String {
         get { urlComponents.path }
-        set { urlComponents.path = newValue }
+        set { urlComponents.path = newValue.prefixingIfNeeded(with: "/") }
     }
     
     private var urlComponents: URLComponents
