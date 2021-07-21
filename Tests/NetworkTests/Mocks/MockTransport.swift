@@ -3,12 +3,18 @@ import Network
 
 final class MockTransport: Transport {
     
-    final class MockTask: TransportTask {
+    struct MockTask: TransportTask {
         
-        private var transport: MockTransport?
+        private let response: Result<(data: Data, response: URLResponse), Error>
+        private var completion: (Data?, URLResponse?, Error?) -> Void
+        private let delay: Double
         
-        init(transport: MockTransport) {
-            self.transport = transport
+        init(response: Result<(data: Data, response: URLResponse), Error>,
+             completion: @escaping (Data?, URLResponse?, Error?) -> Void,
+             delay: Double) {
+            self.response = response
+            self.completion = completion
+            self.delay = delay
         }
         
         func cancel() {
@@ -16,13 +22,19 @@ final class MockTransport: Transport {
         }
         
         func resume() {
-            transport?.complete()
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                switch self.response {
+                case .failure(let error):
+                    self.completion(nil, nil, error)
+                case .success(let response):
+                    self.completion(response.data, response.response, nil)
+                }
+            }
         }
     }
 
-    private var completion: ((Data?, URLResponse?, Error?) -> Void)?
     private let response: Result<(data: Data, response: URLResponse), Error>
-    private let delay: Double
+    private var delay: Double
     
     init(response: Result<(data: Data, response: URLResponse), Error>, delay: Double = 0) {
         self.response = response
@@ -30,18 +42,10 @@ final class MockTransport: Transport {
     }
     
     func send(_ request: URLRequest, _ completion: @escaping (Data?, URLResponse?, Error?) -> Void) -> TransportTask {
-        self.completion = completion
-        return MockTask(transport: self)
+        MockTask(response: response, completion: completion, delay: delay)
     }
     
-    private func complete() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            switch self.response {
-            case .failure(let error):
-                self.completion?(nil, nil, error)
-            case .success(let response):
-                self.completion?(response.data, response.response, nil)
-            }
-        }
+    func update(delay: Double) {
+        self.delay = delay
     }
 }
