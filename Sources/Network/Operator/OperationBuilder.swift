@@ -12,7 +12,7 @@ public class OperationBuilder {
         case environment(Environment)
         case modifyRequest(_ modifier: (Request) -> Request)
         case logging
-        case session(URLSession)
+        case transport(Transport)
         case resetGuard
         case throttle(UInt)
     }
@@ -33,8 +33,8 @@ public class OperationBuilder {
             return modifyRequest(modifier)
         case .resetGuard:
             return resetGuard()
-        case .session(let session):
-            return sessionOperator(session: session)
+        case .transport(let transport):
+            return transportOperator(transport: transport)
         case .throttle(let count):
             return throttle(count: count)
         }
@@ -75,8 +75,8 @@ public class OperationBuilder {
         create { ResetGuard() }
     }
     
-    private func sessionOperator(session: URLSession) -> Self {
-        create { URLSessionOperator(session: session) }
+    private func transportOperator(transport: Transport) -> Self {
+        create { TransportOperator(transport: transport) }
     }
     
     private func throttle(count: UInt) -> Self {

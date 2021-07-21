@@ -1,11 +1,11 @@
 import Foundation
 
-public final class URLSessionOperator: Operator {
+public final class TransportOperator: Operator {
     
-    private let session: Transport
+    private let transport: Transport
     
-    public init(session: Transport = URLSession.shared) {
-        self.session = session
+    public init(transport: Transport = URLSession.shared) {
+        self.transport = transport
         super.init(next: nil)
     }
     
@@ -20,7 +20,7 @@ public final class URLSessionOperator: Operator {
             return task.complete(with: .failure(.from(error, code: .invalidRequest, request: task.request)))
         }
         
-        let dataTask = session.send(urlRequest) { (data, response, error) in
+        let dataTask = transport.send(urlRequest) { (data, response, error) in
             let result = HttpResult(request: task.request, data: data, response: response, error: error)
             task.complete(with: result)
         }
