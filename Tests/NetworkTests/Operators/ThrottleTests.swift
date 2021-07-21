@@ -20,8 +20,9 @@ final class ThrottleTests: XCTestCase {
         var request = request
         request.throttle = .never
         
+        let error = URLError(.unknown)
         let throttle = Throttle(count: 1)
-        let transport = MockTransport(response: .failure(MockError.unknown), delay: 2)
+        let transport = MockTransport(response: .failure(error), delay: 2)
         throttle.next = TransportOperator(transport: transport)
         
         var start: TimeInterval?
@@ -49,8 +50,9 @@ final class ThrottleTests: XCTestCase {
         var request = request
         request.throttle = .always
         
+        let error = URLError(.unknown)
         let throttle = Throttle(count: 1)
-        let transport = MockTransport(response: .failure(MockError.unknown), delay: 2)
+        let transport = MockTransport(response: .failure(error), delay: 2)
         throttle.next = TransportOperator(transport: transport)
         
         let start = CFAbsoluteTimeGetCurrent()
@@ -73,35 +75,51 @@ final class ThrottleTests: XCTestCase {
     
     func testThrottleReset() {
         let expectations = [
-            XCTestExpectation(description: "Request 1"),
-            XCTestExpectation(description: "Request 2")
+            XCTestExpectation(description: "Completion of task 1"),
+            XCTestExpectation(description: "Cancellation of task 1"),
+            XCTestExpectation(description: "Completion of task 2"),
+            XCTestExpectation(description: "Cancellation of task 2"),
+            XCTestExpectation(description: "Reset")
         ]
         
+        let error = URLError(.unknown)
         let throttle = Throttle(count: 1)
-        let transport = MockTransport(response: .failure(MockError.unknown), delay: 1)
+        let transport = MockTransport(response: .failure(error), delay: 1)
         throttle.next = TransportOperator(transport: transport)
         
         var request = request
         request.throttle = .always
         
-        let task1 = throttle.send(request) { _ in
-            XCTFail("Expected reset.")
+        let task1 = throttle.send(request) { result in
+            guard case .failure(let error) = result else {
+                XCTFail("Expected cancel.")
+                return
+            }
+            
+            XCTAssertEqual(error.code, .cancelled)
+            expectations[0].fulfill()
         }
         
         task1.addCancellation {
-            expectations[0].fulfill()
+            expectations[1].fulfill()
         }
 
-        let task2 = throttle.send(request) { _ in
-            XCTFail("Expected reset.")
+        let task2 = throttle.send(request) { result in
+            guard case .failure(let error) = result else {
+                XCTFail("Expected cancel.")
+                return
+            }
+            
+            XCTAssertEqual(error.code, .cancelled)
+            expectations[2].fulfill()
         }
         
         task2.addCancellation {
-            expectations[1].fulfill()
+            expectations[3].fulfill()
         }
         
         throttle.reset {
-            expectations[2].fulfill()
+            expectations[4].fulfill()
         }
         
         wait(for: expectations, timeout: 10)

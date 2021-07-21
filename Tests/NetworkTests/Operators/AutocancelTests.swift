@@ -12,22 +12,32 @@ final class AutocancelTests: XCTestCase {
     }
     
     func testAutocancel() {
-        let expectation = XCTestExpectation(description: "Request")
+        let expectations = [
+            XCTestExpectation(description: "Completion"),
+            XCTestExpectation(description: "Cancellation")
+        ]
         
-        let transport = MockTransport(response: .failure(MockError.unknown), delay: 2)
+        let error = URLError(.unknown)
+        let transport = MockTransport(response: .failure(error), delay: 2)
         let transportOperator = TransportOperator(transport: transport)
         let autocancel = Autocancel(next: transportOperator)
         
-        let task = autocancel.send(request) { _ in
-            XCTFail("Expected cancel.")
+        let task = autocancel.send(request) { result in
+            guard case .failure(let error) = result else {
+                XCTFail("Expected cancel.")
+                return
+            }
+
+            XCTAssertEqual(error.code, .cancelled)
+            expectations[0].fulfill()
         }
         
         task.addCancellation {
-            expectation.fulfill()
+            expectations[1].fulfill()
         }
         
         autocancel.reset { }
 
-        wait(for: [expectation], timeout: 10)
+        wait(for: expectations, timeout: 10)
     }
 }
