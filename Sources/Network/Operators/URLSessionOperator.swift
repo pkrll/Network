@@ -2,9 +2,9 @@ import Foundation
 
 public final class URLSessionOperator: Operator {
     
-    private let session: URLSession
+    private let session: Transport
     
-    public init(session: URLSession = .shared) {
+    public init(session: Transport = URLSession.shared) {
         self.session = session
         super.init(next: nil)
     }
@@ -20,14 +20,13 @@ public final class URLSessionOperator: Operator {
             return task.complete(with: .failure(.from(error, code: .invalidRequest, request: task.request)))
         }
         
-        let dataTask = session.dataTask(with: urlRequest) { (data, response, error) in
+        let dataTask = session.send(urlRequest) { (data, response, error) in
             let result = HttpResult(request: task.request, data: data, response: response, error: error)
             task.complete(with: result)
         }
 
         task.addCancellation {
             dataTask.cancel()
-            print("Cancelled")
         }
         
         dataTask.resume()
