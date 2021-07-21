@@ -22,9 +22,11 @@ final class MockTransport: Transport {
 
     private var completion: ((Data?, URLResponse?, Error?) -> Void)?
     private let response: Result<(data: Data, response: URLResponse), Error>
+    private let delay: Double
     
-    init(response: Result<(data: Data, response: URLResponse), Error>) {
+    init(response: Result<(data: Data, response: URLResponse), Error>, delay: Double = 0) {
         self.response = response
+        self.delay = delay
     }
     
     func send(_ request: URLRequest, _ completion: @escaping (Data?, URLResponse?, Error?) -> Void) -> TransportTask {
@@ -33,12 +35,13 @@ final class MockTransport: Transport {
     }
     
     private func complete() {
-        switch response {
-        case .failure(let error):
-            completion?(nil, nil, error)
-        case .success(let response):
-            completion?(response.data, response.response, nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            switch self.response {
+            case .failure(let error):
+                self.completion?(nil, nil, error)
+            case .success(let response):
+                self.completion?(response.data, response.response, nil)
+            }
         }
     }
-    
 }
