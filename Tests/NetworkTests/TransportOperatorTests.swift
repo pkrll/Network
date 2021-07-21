@@ -6,7 +6,7 @@ final class TransportOperatorTests: XCTestCase {
     private var request: Request {
         var request = Request(.get)
         request.host = "github.com"
-        request.path = "/pkrll/network"
+        request.path = "pkrll/network"
         
         return request
     }
