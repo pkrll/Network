@@ -1,6 +1,6 @@
 # Network
 
-![Swift 5.4](https://img.shields.io/badge/Swift-5.4-orange) ![SPM Compatible](https://img.shields.io/badge/SPM-Compatible-success)
+![Swift 5.4](https://img.shields.io/badge/Swift-5.4-orange) ![SPM Compatible](https://img.shields.io/badge/SPM-Compatible-success)![build status](https://github.com/pkrll/network/actions/workflows/swift.yml/badge.svg)
 
 A simple network stack based on Dave DeLong's excellent exploration of the [HTTP stack in Swift](https://davedelong.com/blog/2020/06/27/http-in-swift-part-1/). 
 
@@ -209,4 +209,88 @@ Network has the following built-in operators:
 | `ResetGuard`        | This operator prevents resetting an already resetting pipeline. This operator should preceed the operator `Autocancel`. |
 | `Throttle`          | This operator allows for throttling requests.                |
 | `TransportOperator` | This is a terminal operator, meaning it should be the last one in the chain. This operator handles the actual request. If injected with an `URLSession` object, it will call its `dataTask(with:completionHandler:)` method, starting the URL request. |
+
+#### Creating Operators
+
+There are two ways to create operators. You can either do it by explicitly initializing the operators you want to use. Make sure to set the `next` operator:
+
+```swift
+let autocancel = AutoCancel()
+let applyEnvironment = ApplyEnvironment(environment: environment)
+let transport = TransportOperator(transport: URLSession.shared)
+
+autocancel.next = applyEnvironment
+applyEnvironment.next = transport
+
+autocancel.send(request) { result in
+  // ...
+}
+```
+
+Network also provides a factory:
+
+```swift
+let builder = OperationsBuilder()
+let operation = builder
+	.append(.transport(URLSession.shared))
+	.append(.environment(environment))
+  .append(.autocancel)
+  .build()
+
+operation.send(request) { result in
+   // ...
+}
+```
+
+The first operator appended to the builder, will serve as the terminal operator. The last operator will be the first one in the chain.
+
+##### Custom operators
+
+It is also possible to create custom operators by subclassing the `Operator` class. Depending on your needs, you would want to override one or several of the super classes methods, as described below.
+
+However, there are few reasons to subclass the `reset(on:completion:)` and `send(_:completion:)` methods. If you would want to process the task in any particular way, you should override `load(_:)`, modify the task and send it to the next operator by calling `super.load(_:)`. If your operator should perform some specific action on reset, override the `reset(with:)` method, and call `super.reset(with:)` when finished.
+
+```swift
+open class Operator {
+    /// The next operator in the chain.
+    public var next: Operator? { get set }
+    /// Loads the given Task.
+    ///
+    /// We usually do not want to call this method from outside. Instead, use the
+    /// `send(_:completion:)` method. Internally, that method should call `load(_:)`,
+    /// once it has finished processing the request.
+    ///
+    /// - Note: Any custom classes that serve as the terminal operator must implement this
+    ///         method. Otherwise, an error is returned.
+    ///
+    /// - Parameter task: The task to process.
+    open func load(_ task: Task)
+    /// Invoked when a reset has been requested. This method should reset any internal state,
+    /// if possible.
+    ///
+    /// Once the reset has been made, the operator must call the next operator in the chain,
+    /// with the same dispatch group object.
+    ///
+    /// - Note: This method should not be called from the outside. This is an internal method
+    ///         used within the operator chain. To begin a reset, call `reset(on:completion:)`.
+    ///
+    /// - Parameter group: Used to synchronize the reset.
+    open func reset(with group: DispatchGroup)
+    /// Resets the entire chain. Any in-flight requests will be cancelled, if possible.
+    ///
+    /// Once the reset has been finished, the completion block will be invoked.
+    ///
+    /// - Parameter queue:      The dispatch queue used to call the completion block on.
+    /// - Parameter completion: The completion block is invoked once the reset is done.
+    open func reset(on queue: DispatchQueue = .main, completion: @escaping () -> Void)
+    /// Prepares and sends the request.
+    ///
+    /// This method should be called on the first operator in the chain.
+    ///
+    /// - Parameter request:    The request to send.
+    /// - Parameter completion: The completion block is invoked once the request has
+    ///                         produced a result.
+    open func send(_ request: Request, completion: @escaping (HttpResult) -> Void) -> Task
+}
+```
 
