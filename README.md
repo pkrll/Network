@@ -208,5 +208,5 @@ Network has the following built-in operators:
 | `ModifyRequest`     | This operator modifies all requests passing through the pipeline. |
 | `ResetGuard`        | This operator prevents resetting an already resetting pipeline. This operator should preceed the operator `Autocancel`. |
 | `Throttle`          | This operator allows for throttling requests.                |
-| `TransportOperator` | This is a terminal operator, meaning it should be the last one in the chain. This operator handles the actual request. If injected with an `URLSession` object, it will call its ``dataTask(with:completionHandler:)` method, starting the URL request. |
+| `TransportOperator` | This is a terminal operator, meaning it should be the last one in the chain. This operator handles the actual request. If injected with an `URLSession` object, it will call its `dataTask(with:completionHandler:)` method, starting the URL request. |
 
