@@ -10,7 +10,7 @@ open class Operator {
         }
     }
     
-    init(next: Operator? = nil) {
+    public init(next: Operator? = nil) {
         self.next = next
     }
     /// Loads the given Task.

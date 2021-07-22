@@ -5,7 +5,7 @@ import Foundation
 /// - Note: The terminal operator should be added first in the building process,
 ///         as the objects are prepended to the chain when using the convenience
 ///         methods or the ``create(operator:)`` method.
-public class OperationBuilder {
+open class OperationBuilder {
     
     public enum Operation {
         case autocancel
@@ -17,11 +17,11 @@ public class OperationBuilder {
         case throttle(UInt)
     }
     
-    private var next: Operator?
+    private var previous: Operator?
     
     public init() {}
     
-    public func append(_ operator: Operation) -> Self {
+    open func append(_ operator: Operation) -> Self {
         switch `operator` {
         case .autocancel:
             return autocancel()
@@ -39,47 +39,45 @@ public class OperationBuilder {
             return throttle(count: count)
         }
     }
-    /// Prepends the specified ``Operation`` object to the chain of ``Operation``s.
+    /// Appends the specified ``Operation`` object to the chain of ``Operation``s.
     ///
     /// - Parameter operation: A closure that must evaluate to a ``Operation``.
-    public func create(operation: () -> Operator) -> Self {
-        let operation = operation()
-        
-        operation.next = next
-        next = operation
+    open func append(operator: Operator) -> Self {
+        `operator`.next = previous
+        previous = `operator`
         
         return self
     }
     /// Returns the chained operation.
-    public func build() -> Operator {
-        next!
+    open func build() -> Operator {
+        previous!
     }
     
     private func applyEnvironment(environment: Environment) -> Self {
-        create { ApplyEnvironment(environment: environment) }
+        append(operator: ApplyEnvironment(environment: environment))
     }
     
     private func autocancel() -> Self {
-        create { Autocancel() }
+        append(operator: Autocancel())
     }
     
     private func logging() -> Self {
-        create { Logging() }
+        append(operator: Logging())
     }
     
     private func modifyRequest(_ modifier: @escaping (Request) -> Request) -> Self {
-        create { ModifyRequest(modifier: modifier) }
+        append(operator: ModifyRequest(modifier: modifier))
     }
     
     private func resetGuard() -> Self {
-        create { ResetGuard() }
+        append(operator: ResetGuard())
     }
     
     private func transportOperator(transport: Transport) -> Self {
-        create { TransportOperator(transport: transport) }
+        append(operator: TransportOperator(transport: transport))
     }
     
     private func throttle(count: UInt) -> Self {
-        create { Throttle(count: count) }
+        append(operator: Throttle(count: count))
     }
 }
