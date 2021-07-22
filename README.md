@@ -6,6 +6,7 @@ A simple network stack based on Dave DeLong's excellent exploration of the [HTTP
 
 * [Installation](#installation)
 * [Usage](#usage)  
+* [Documentation](#documentation)
   * [Request](#request)
     * [RequestOption](#requestoption)
       * [Environment](#environment)
@@ -13,6 +14,8 @@ A simple network stack based on Dave DeLong's excellent exploration of the [HTTP
   * [Response](#response)
   * [HttpError](#httperror)
   * [Operators](#operators) 
+    * [Creating Operators](#creating-operators)
+      * [Custom Operators](#custom-operators)
 
 ## Installation
 
@@ -60,6 +63,8 @@ To send a `Request`, we must call the `send(_:completion:)` method on an operato
 
 We must also pass in a completion handler that can return either an `HttpError`, or a`Response` object. For more information, see the documentation for [Response](#response) and [HttpError](#httpError).
 
+## Documentation
+
 ### Request
 
 Every call begins with a `Request`. This structure describes the request you wish to make and contains information on which HTTP method to use, the URL and any headers and data payload:
@@ -90,6 +95,8 @@ request.path = "some/path"
 request.add(headers: ["X-API-KEY": "someKey"])
 reuest.add(queryItems: [URLQueryItem(name: "someQuery", value: "someValue")])
 ```
+
+If you want to attach a body to your request, you can do so by setting the `body` property. This property is of type `Body`. There are three built-in `Body` types: `DataBody`, `JSONBody` and `EmptyBody`. It is also possible to create custom `Body` types, by conforming to the `Body` protocol.
 
 Network also offers some convenience methods for the most common HTTP methods:
 
@@ -199,6 +206,8 @@ public struct HttpError : Error {
 
 The Network framework is comprised of so called operators. Each operator has a specific responsibility in the processing of a network request. 
 
+You send a request on one or more operators, by chaining them together. The last operator in the chain must be a terminal operator, that handles the actual request.
+
 Network has the following built-in operators:
 
 | Operator            | Function                                                     |
@@ -208,7 +217,7 @@ Network has the following built-in operators:
 | `ModifyRequest`     | This operator modifies all requests passing through the pipeline. |
 | `ResetGuard`        | This operator prevents resetting an already resetting pipeline. This operator should preceed the operator `Autocancel`. |
 | `Throttle`          | This operator allows for throttling requests.                |
-| `TransportOperator` | This is a terminal operator, meaning it should be the last one in the chain. This operator handles the actual request. If injected with an `URLSession` object, it will call its `dataTask(with:completionHandler:)` method, starting the URL request. |
+| `TransportOperator` | This is a terminal operator, meaning it should be the last one in the chain. This operator performs the actual request. If injected with an `URLSession` object, it will call its `dataTask(with:completionHandler:)` method, starting the URL request. |
 
 #### Creating Operators
 
@@ -244,11 +253,13 @@ operation.send(request) { result in
 
 The first operator appended to the builder, will serve as the terminal operator. The last operator will be the first one in the chain.
 
-##### Custom operators
+##### Custom Operators
 
 It is also possible to create custom operators by subclassing the `Operator` class. Depending on your needs, you would want to override one or several of the super classes methods, as described below.
 
-However, there are few reasons to subclass the `reset(on:completion:)` and `send(_:completion:)` methods. If you would want to process the task in any particular way, you should override `load(_:)`, modify the task and send it to the next operator by calling `super.load(_:)`. If your operator should perform some specific action on reset, override the `reset(with:)` method, and call `super.reset(with:)` when finished.
+However, there are few reasons to subclass the `reset(on:completion:)` and `send(_:completion:)` methods. The base class `Operator` contains the logic needed in most cases.
+
+If you would want to process the task in any particular way, you should override `load(_:)`, modify the task and send it to the next operator by calling `super.load(_:)`. If your operator should perform some specific action on reset, override the `reset(with:)` method, and call `super.reset(with:)` when finished.
 
 ```swift
 open class Operator {
@@ -293,4 +304,8 @@ open class Operator {
     open func send(_ request: Request, completion: @escaping (HttpResult) -> Void) -> Task
 }
 ```
+
+### Task
+
+The ``send(_:completion)` method on an operator returns a `Task`. This object contains information on the request sent, and can be used to cancel the current request.
 
