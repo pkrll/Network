@@ -1,6 +1,6 @@
 # Network
 
-![Swift 5.4](https://img.shields.io/badge/Swift-5.4-orange) ![SPM Compatible](https://img.shields.io/badge/SPM-Compatible-success)![build status](https://github.com/pkrll/network/actions/workflows/swift.yml/badge.svg)
+![Swift 5.4](https://img.shields.io/badge/Swift-5.4-orange) ![SPM Compatible](https://img.shields.io/badge/SPM-Compatible-success) ![build status](https://github.com/pkrll/network/actions/workflows/swift.yml/badge.svg)
 
 A simple network stack based on Dave DeLong's excellent exploration of the [HTTP stack in Swift](https://davedelong.com/blog/2020/06/27/http-in-swift-part-1/). 
 
@@ -16,6 +16,7 @@ A simple network stack based on Dave DeLong's excellent exploration of the [HTTP
   * [Operators](#operators) 
     * [Creating Operators](#creating-operators)
       * [Custom Operators](#custom-operators)
+  * [Task](#task)
 
 ## Installation
 
