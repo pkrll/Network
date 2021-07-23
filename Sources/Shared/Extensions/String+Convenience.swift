@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 public extension String {
     static func localizedString(forStatusCode statusCode: Int) -> String {
