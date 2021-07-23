@@ -20,7 +20,7 @@ A simple network stack based on Dave DeLong's excellent exploration of the [HTTP
 
 ## Installation
 
-Network supports Swift Package Manager. Add ``.package(url: "https://github.com/pkrll/network.git", from: "1.0.0")`` to your ``Package.swift`` file to add it as a dependency. 
+Network supports Swift Package Manager. Add ``.package(url: "https://github.com/pkrll/network.git", from: "0.1.0")`` to your ``Package.swift`` file to add it as a dependency. 
 
 ## Usage
 
