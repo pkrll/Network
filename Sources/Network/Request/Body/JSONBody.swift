@@ -8,7 +8,7 @@ public struct JSONBody: Body {
     
     private let content: () throws -> Data
     
-    public init<T: Encodable>(_ value: T, encoder: Encoder = JSONEncoder()) {
+    public init<T: Encodable>(_ value: T, encoder: BodyEncoding = JSONEncoder()) {
         self.content = {
             try encoder.encode(value)
         }
