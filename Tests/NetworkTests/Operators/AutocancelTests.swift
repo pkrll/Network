@@ -1,5 +1,5 @@
 import XCTest
-@testable import Network
+@testable import NetworkStack
 
 final class AutocancelTests: XCTestCase {
     

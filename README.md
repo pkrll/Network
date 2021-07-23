@@ -33,7 +33,7 @@ To make a network call, we must first build up the pipeline. This can be done by
 The following code snippet shows an example on how to create a chain that calls a mock API endpoint.
 
 ```swift
-import Network
+import NetworkStack
 
 let environment = Environment(host: "jsonplaceholder.typicode.com")
 
