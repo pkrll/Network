@@ -4,12 +4,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "Network",
-    products: [.library(name: "Network", targets: ["Network"])],
+    name: "NetworkStack",
+    products: [.library(name: "NetworkStack", targets: ["NetworkStack"])],
     dependencies: [],
     targets: [
-        .target(name: "Network", dependencies: ["Shared"]),
+        .target(name: "NetworkStack", dependencies: ["Shared"]),
         .target(name: "Shared", dependencies: []),
-        .testTarget(name: "NetworkTests", dependencies: ["Network"])
+        .testTarget(name: "NetworkTests", dependencies: ["NetworkStack"])
     ]
 )
